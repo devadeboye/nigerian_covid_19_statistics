@@ -42,6 +42,33 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
 
+    var _singleStateStatisticsResult = Expanded(
+        child: ListView.builder(
+          padding: const EdgeInsets.all(1.0),
+          itemCount: 5,
+          itemBuilder: (BuildContext context, int index) {
+            return Container(
+              height: 50,
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: Text('Key'),
+                  ),
+                  Expanded(
+                    flex: 1,
+                    child: Text(
+                      index.toString(),
+                      textAlign: TextAlign.end,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        )
+    );
+
     var _stateDropDownList = Expanded(
       flex: 5,
       child: DropdownButton<String>(
@@ -120,6 +147,33 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
 
+    var _highestMortalityList = Expanded(
+      child: ListView.builder(
+        padding: const EdgeInsets.all(1.0),
+        itemCount: 3,
+        itemBuilder: (BuildContext context, int index) {
+          return Container(
+            height: 50,
+            child: Row(
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: Text('State Name'),
+                ),
+                Expanded(
+                  flex: 1,
+                  child: Text(
+                    index.toString(),
+                    textAlign: TextAlign.end,
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      )
+    );
+
     var _highestMortalitySection = Expanded(
       flex: 2,
       child: SizedBox.expand(
@@ -134,7 +188,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 Text(
                     "Highest Mortality",
                     style: Theme.of(context).textTheme.headline5
-                )
+                ),
+                _highestMortalityList,
               ],
             ),
           ),
@@ -318,11 +373,11 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
 
                 Expanded(
-                  flex: 2,
+                  flex: 3,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      Text(''), //TODO: replace with the result of the query above
+                      _singleStateStatisticsResult, //TODO: replace with the result of the query above
                     ],
                   ),
                 )
