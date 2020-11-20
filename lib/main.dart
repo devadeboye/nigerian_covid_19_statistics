@@ -1,8 +1,10 @@
-import 'dart:convert';
 import 'dart:core';
 
 import 'package:flutter/material.dart';
-import 'getJsonResources.dart';
+import 'package:untitled/stateDataModel.dart';
+import 'nationalSummaryModel.dart';
+import 'services.dart';
+import 'stateDropdownItems.dart';
 
 void main() {
   runApp(MyApp());
@@ -23,6 +25,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
+
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
 
@@ -32,127 +35,201 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  String _nigeriaStateName;
 
-  // TODO: remove these later
-  String _nationalSummaryJson = '{"totalSamplesTested":"673183","totalConfirmedCases":63328,"totalActiveCases":2498,"discharged":59675,"death":1155}';
-  String _stateDataJson = '{"state":"Zamfara","confirmedCases":79,"casesOnAdmission":1,"discharged":73,"death":5}';
-  String _fullDetails = '{"Bauchi":{"discharged":708,"death":14,"casesOnAdmission":22,"state":"Bauchi","confirmedCases":744},"Kogi":{"discharged":3,"death":2,"casesOnAdmission":0,"state":"Kogi","confirmedCases":5},"Abia":{"discharged":908,"death":9,"casesOnAdmission":9,"state":"Abia","confirmedCases":926},"Lagos":{"discharged":21019,"death":220,"casesOnAdmission":1165,"state":"Lagos","confirmedCases":22404},"Anambra":{"discharged":265,"death":19,"casesOnAdmission":1,"state":"Anambra","confirmedCases":285},"Edo":{"discharged":2559,"death":112,"casesOnAdmission":14,"state":"Edo","confirmedCases":2685},"Yobe":{"discharged":68,"death":8,"casesOnAdmission":6,"state":"Yobe","confirmedCases":82},"Kano":{"discharged":1690,"death":54,"casesOnAdmission":20,"state":"Kano","confirmedCases":1764},"Bayelsa":{"discharged":382,"death":21,"casesOnAdmission":20,"state":"Bayelsa","confirmedCases":423},"Katsina":{"discharged":929,"death":24,"casesOnAdmission":12,"state":"Katsina","confirmedCases":965},"Zamfara":{"discharged":73,"death":5,"casesOnAdmission":1,"state":"Zamfara","confirmedCases":79},"Taraba":{"discharged":129,"death":6,"casesOnAdmission":20,"state":"Taraba","confirmedCases":155},"AkwaIbom":{"discharged":289,"death":9,"casesOnAdmission":21,"state":"AkwaIbom","confirmedCases":319},"Kwara":{"discharged":1028,"death":27,"casesOnAdmission":29,"state":"Kwara","confirmedCases":1084},"Plateau":{"discharged":3626,"death":33,"casesOnAdmission":60,"state":"Plateau","confirmedCases":3719},"Oyo":{"discharged":3210,"death":45,"casesOnAdmission":362,"state":"Oyo","confirmedCases":3617},"Niger":{"discharged":264,"death":12,"casesOnAdmission":10,"state":"Niger","confirmedCases":286},"Ekiti":{"discharged":326,"death":6,"casesOnAdmission":11,"state":"Ekiti","confirmedCases":343},"Imo":{"discharged":613,"death":12,"casesOnAdmission":23,"state":"Imo","confirmedCases":648},"Benue":{"discharged":460,"death":11,"casesOnAdmission":22,"state":"Benue","confirmedCases":493},"Rivers":{"discharged":2750,"death":59,"casesOnAdmission":105,"state":"Rivers","confirmedCases":2914},"Sokoto":{"discharged":148,"death":17,"casesOnAdmission":0,"state":"Sokoto","confirmedCases":165},"Ondo":{"discharged":1585,"death":39,"casesOnAdmission":96,"state":"Ondo","confirmedCases":1720},"Borno":{"discharged":705,"death":36,"casesOnAdmission":4,"state":"Borno","confirmedCases":745},"Ogun":{"discharged":1980,"death":31,"casesOnAdmission":90,"state":"Ogun","confirmedCases":2101},"Gombe":{"discharged":857,"death":25,"casesOnAdmission":56,"state":"Gombe","confirmedCases":938},"Delta":{"discharged":1737,"death":49,"casesOnAdmission":37,"state":"Delta","confirmedCases":1823},"FCT":{"discharged":5870,"death":82,"casesOnAdmission":420,"state":"FCT","confirmedCases":6372},"Osun":{"discharged":904,"death":20,"casesOnAdmission":16,"state":"Osun","confirmedCases":940},"Enugu":{"discharged":1290,"death":21,"casesOnAdmission":21,"state":"Enugu","confirmedCases":1332},"Kaduna":{"discharged":2646,"death":45,"casesOnAdmission":73,"state":"Kaduna","confirmedCases":2764},"Ebonyi":{"discharged":1019,"death":30,"casesOnAdmission":6,"state":"Ebonyi","confirmedCases":1055},"Nasarawa":{"discharged":325,"death":13,"casesOnAdmission":147,"state":"Nasarawa","confirmedCases":485},"Jigawa":{"discharged":308,"death":11,"casesOnAdmission":6,"state":"Jigawa","confirmedCases":325},"Adamawa":{"discharged":238,"death":19,"casesOnAdmission":4,"state":"Adamawa","confirmedCases":261},"Kebbi":{"discharged":84,"death":8,"casesOnAdmission":1,"state":"Kebbi","confirmedCases":93},"CrossRiver":{"discharged":78,"death":9,"casesOnAdmission":2,"state":"CrossRiver","confirmedCases":89}}';
+class _MyHomePageState extends State<MyHomePage> {
+  String _userInputValue;
+  Future<NationalSummaryModel> _nationalSummary;
+  Future<StateDataModel> _nationalDetails;
+  List<StateModel> _allStateData;
+  StateModel _selectedState;
+
+  @override
+  void initState() {
+    super.initState();
+    _nationalSummary = fetchNationalSummaryData();
+    _nationalDetails = fetchNationalDetailsData();
+  }
 
   @override
   Widget build(BuildContext context) {
-    // TODO: remove later
-    Map _nationalSummaryMap = jsonDecode(_nationalSummaryJson);
-    var _nationalSummary = NationalSummaryData.fromJson(_nationalSummaryMap);
-    Map _stateDataMap = jsonDecode(_stateDataJson);
-    var _fullDetailsMap = jsonDecode(_fullDetails);
-    var _fullDetailsResultKeys = _fullDetailsMap.keys.toList();
-    var _sortedFullDetailsResultKeys = new List.from(_fullDetailsResultKeys);
-    _sortedFullDetailsResultKeys.sort();
-
-    List<dynamic> generateMortalityDataString(){
-      var result = [];
-      for (var mortalityKey in _sortedFullDetailsResultKeys) {
-        var value = _fullDetailsMap[mortalityKey]['death'];
-        result.add("$value $mortalityKey");
-      }
-      return result;
-    }
-
-    var _mortalityListString = generateMortalityDataString();
-    _mortalityListString.sort((a,b) => int.parse(a.split(' ').first).compareTo(int.parse(b.split(' ').first)));
-    print(_mortalityListString);
-
-    var _stateDataVerbose = {
-      'state':'State', 'confirmedCases':'Confirmed Cases',
-      'casesOnAdmission':'Cases On Admission', 'discharged':'Discharged',
-      'death':'Death'
-    };
 
     var _goButton = Expanded(
       flex: 1,
       child: ElevatedButton(
-        onPressed: (){},
+        onPressed: (){
+          for (StateModel state in _allStateData) {
+            if (state.name == _userInputValue) {
+              setState(() {
+                _selectedState = state;
+              });
+            }
+          }
+        },
         child: Text('Go'),
       ),
     );
 
+    var emptyText = Container(
+        child: Text(''),
+      );
+
     var _singleStateStatisticsResult = Expanded(
-        child: ListView.builder(
+        child: _selectedState == null ? emptyText : ListView(
           padding: const EdgeInsets.all(1.0),
-          itemCount: 5,
-          itemBuilder: (BuildContext context, int index) {
-            String resultKey = _stateDataMap.keys.elementAt(index);
-            return Container(
+          children: [
+            Container(
               height: 50,
               child: Row(
                 children: [
                   Expanded(
                     flex: 3,
-                    child: Text('${_stateDataVerbose[resultKey]}'),
+                    child: Text('State'),
                   ),
                   Expanded(
                     flex: 1,
                     child: Text(
-                      '${_stateDataMap[resultKey]}',
+                      '${_selectedState.name}',
                       textAlign: TextAlign.end,
                     ),
                   ),
                 ],
               ),
-            );
-          },
+            ),
+
+            Container(
+              height: 50,
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: Text('Confirmed Cases'),
+                  ),
+                  Expanded(
+                    flex: 1,
+                    child: Text(
+                      '${_selectedState.confirmedCases}',
+                      textAlign: TextAlign.end,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            Container(
+              height: 50,
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: Text('Cases On Admission'),
+                  ),
+                  Expanded(
+                    flex: 1,
+                    child: Text(
+                      '${_selectedState.casesOnAdmission}',
+                      textAlign: TextAlign.end,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            Container(
+              height: 50,
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: Text('Discharged'),
+                  ),
+                  Expanded(
+                    flex: 1,
+                    child: Text(
+                      '${_selectedState.discharged}',
+                      textAlign: TextAlign.end,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            Container(
+              height: 50,
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: Text('Death'),
+                  ),
+                  Expanded(
+                    flex: 1,
+                    child: Text(
+                      '${_selectedState.death}',
+                      textAlign: TextAlign.end,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          ],
         )
     );
 
     var _stateDropDownList = Expanded(
       flex: 5,
       child: DropdownButton<String>(
-        items: [
-          DropdownMenuItem(
-            value: "Abia",
-            child: Text('Abia'),
-          ),
-          DropdownMenuItem(
-            value: "Adamawa",
-            child: Text('Adamawa'),
-          )
-        ],
+        items: createStateDropdownItems(),
         hint: Text(
             "select a state",
         ),
         onChanged: (value){
           setState(() {
-            _nigeriaStateName = value;
-            //TODO: implement the result fetching logic
+            _userInputValue = value;
           });
         },
-        value: _nigeriaStateName,
+        value: _userInputValue,
         isExpanded: true,
       ),
     );
     
-    var _newCasesList = ListView.builder(
-      padding: const EdgeInsets.all(1.0),
-      itemCount: _sortedFullDetailsResultKeys.length,
-      itemBuilder: (BuildContext context, int index) {
-        return Container(
-          height: 50,
-          child: Row(
-            children: [
-              Expanded(
-                flex: 3,
-                child: Text(_sortedFullDetailsResultKeys[index]),
-              ),
-              Expanded(
-                flex: 1,
-                child: Text(
-                  index.toString(), // TODO: add the result later
-                  textAlign: TextAlign.end,
+    var _newCasesList = FutureBuilder<StateDataModel>(
+      future: _nationalDetails,
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          return ListView.builder(
+            padding: const EdgeInsets.all(1.0),
+            itemCount: snapshot.data.states.length,
+            itemBuilder: (BuildContext context, int index) {
+              return Container(
+                height: 50,
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: Text(_allStateData[index].name),
+                    ),
+                    Expanded(
+                      flex: 1,
+                      child: Text(
+                        "${_allStateData[index].confirmedCases}", // TODO: replace with newcases
+                        textAlign: TextAlign.end,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
+              );
+            },
+          );
+        } else if (snapshot.hasError) {
+          return Expanded(
+            child: Center(
+              child: Text("Unable to fetch data"),
+            ),
+          );
+        }
+        return Expanded(
+          child: Center(
+            child: CircularProgressIndicator(),
           ),
         );
       },
@@ -184,68 +261,101 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
 
-    var _highestMortalityList = Expanded(
-      child: ListView(
-        padding: const EdgeInsets.all(1.0),
-        children: [
-          Container(
-            height: 50,
-            child: Row(
-              children: [
-                Expanded(
-                  flex: 3,
-                  child: Text(_mortalityListString[36].split(' ').last),
-                ),
-                Expanded(
-                  flex: 1,
-                  child: Text(
-                    _mortalityListString[36].split(' ').first,
-                    textAlign: TextAlign.end,
-                  ),
-                ),
-              ],
-            ),
-          ),
+    var _highestMortalityList = FutureBuilder<StateDataModel>(
+      future: _nationalDetails,
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          var states = snapshot.data.states;
+          // populate the _allStateData variable above
+          _allStateData = states;
 
-          Container(
-            height: 50,
-            child: Row(
-              children: [
-                Expanded(
-                  flex: 3,
-                  child: Text(_mortalityListString[35].split(' ').last),
-                ),
-                Expanded(
-                  flex: 1,
-                  child: Text(
-                    _mortalityListString[35].split(' ').first,
-                    textAlign: TextAlign.end,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          List<String> generateMortalityList() {
+            List<String> result = [];
+            for (var nigerianState in states) {
+              result.add("${nigerianState.death} ${nigerianState.name}");
+            }
+            return result;
+          }
 
-          Container(
-            height: 50,
-            child: Row(
-              children: [
-                Expanded(
-                  flex: 3,
-                  child: Text(_mortalityListString[34].split(' ').last),
-                ),
-                Expanded(
-                  flex: 1,
-                  child: Text(
-                    _mortalityListString[34].split(' ').first,
-                    textAlign: TextAlign.end,
+          var mortalityList = generateMortalityList();
+          mortalityList.sort((a,b) => int.parse(a.split(' ').first).compareTo(int.parse(b.split(' ').first)));
+
+          return Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(1.0),
+                children: [
+                  Container(
+                    height: 50,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: Text(mortalityList[36].split(' ').last),
+                        ),
+                        Expanded(
+                          flex: 1,
+                          child: Text(
+                            mortalityList[36].split(' ').first,
+                            textAlign: TextAlign.end,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+
+                  Container(
+                    height: 50,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: Text(mortalityList[35].split(' ').last),
+                        ),
+                        Expanded(
+                          flex: 1,
+                          child: Text(
+                            mortalityList[35].split(' ').first,
+                            textAlign: TextAlign.end,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  Container(
+                    height: 50,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: Text(mortalityList[34].split(' ').last),
+                        ),
+                        Expanded(
+                          flex: 1,
+                          child: Text(
+                            mortalityList[34].split(' ').first,
+                            textAlign: TextAlign.end,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              )
+          );
+        } else if (snapshot.hasError) {
+          return Expanded(
+            child: Center(
+              child: Text("Unable to fetch data"),
             ),
+          );
+        }
+        return Expanded(
+          child: Center(
+            child: CircularProgressIndicator(),
           ),
-        ],
-      )
+        );
+      },
     );
 
     var _highestMortalitySection = Expanded(
@@ -290,105 +400,127 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
 
                 Expanded(
-                  child: ListView(
-                    children: [
-                      Container(
-                        height: 50,
-                        child: Row(
-                          children: [
-                            Expanded(
-                              flex: 3,
-                              child: Text('Total Samples Tested'),
-                            ),
-                            Expanded(
-                              flex: 1,
-                              child: Text(
-                                _nationalSummary.totalSamplesTested.toString(),
-                                textAlign: TextAlign.end,
+                  child: FutureBuilder<NationalSummaryModel>(
+                    future: _nationalSummary,
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        return Expanded(
+                          child: ListView(
+                            children: [
+                              Container(
+                                height: 50,
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      flex: 3,
+                                      child: Text('Total Samples Tested'),
+                                    ),
+                                    Expanded(
+                                      flex: 1,
+                                      child: Text(
+                                        snapshot.data.totalSamplesTested, //.toString(),
+                                        textAlign: TextAlign.end,
+                                      )
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
 
-                      Container(
-                        height: 50,
-                        child: Row(
-                          children: [
-                            Expanded(
-                              flex: 3,
-                              child: Text('Total Confirmed Cases'),
-                            ),
-                            Expanded(
-                              flex: 1,
-                              child: Text(
-                                _nationalSummary.totalConfirmedCases.toString(),
-                                textAlign: TextAlign.end,
+                              Container(
+                                height: 50,
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      flex: 3,
+                                      child: Text('Total Confirmed Cases'),
+                                    ),
+                                    Expanded(
+                                      flex: 1,
+                                      child: Text(
+                                        snapshot.data.totalConfirmedCases.toString(),
+                                        textAlign: TextAlign.end,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
 
-                      Container(
-                        height: 50,
-                        child: Row(
-                          children: [
-                            Expanded(
-                              flex: 3,
-                              child: Text('Total Active Cases'),
-                            ),
-                            Expanded(
-                              flex: 1,
-                              child: Text(
-                                _nationalSummary.totalActiveCases.toString(),
-                                textAlign: TextAlign.end,
+                              Container(
+                                height: 50,
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      flex: 3,
+                                      child: Text('Total Active Cases'),
+                                    ),
+                                    Expanded(
+                                      flex: 1,
+                                      child: Text(
+                                        snapshot.data.totalActiveCases.toString(),
+                                        textAlign: TextAlign.end,
+                                      )
+                                    )
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
 
-                      Container(
-                        height: 50,
-                        child: Row(
-                          children: [
-                            Expanded(
-                              flex: 3,
-                              child: Text('Discharged'),
-                            ),
-                            Expanded(
-                              flex: 1,
-                              child: Text(
-                                _nationalSummary.discharged.toString(),
-                                textAlign: TextAlign.end,
+                              Container(
+                                height: 50,
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      flex: 3,
+                                      child: Text('Discharged'),
+                                    ),
+                                    Expanded(
+                                      flex: 1,
+                                      child: Text(
+                                        snapshot.data.discharged.toString(),
+                                        textAlign: TextAlign.end,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
 
-                      Container(
-                        height: 50,
-                        child: Row(
-                          children: [
-                            Expanded(
-                              flex: 3,
-                              child: Text('Death'),
-                            ),
-                            Expanded(
-                              flex: 1,
-                              child: Text(
-                                _nationalSummary.death.toString(),
-                                textAlign: TextAlign.end,
+                              Container(
+                                height: 50,
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      flex: 3,
+                                      child: Text('Death'),
+                                    ),
+                                    Expanded(
+                                      flex: 1,
+                                      child: Text(
+                                        snapshot.data.death.toString(),
+                                        textAlign: TextAlign.end,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
+                            ],
+                          ),
+                        );
+                      } else if (snapshot.hasError) {
+                        return Expanded(
+                          child: Center(
+                            child: Text(
+                                "Unable to fetch data",
                             ),
-                          ],
+                          ),
+                        );
+                      }
+                      return Expanded(
+                        child: Center(
+                          child: CircularProgressIndicator(),
                         ),
-                      ),
-                    ],
+                      );
+                    },
                   ),
-                )
+                ),
               ],
             ),
           ),
@@ -396,32 +528,50 @@ class _MyHomePageState extends State<MyHomePage> {
       )
     );
 
-    var _deathPerStateList = ListView.builder(
-      padding: const EdgeInsets.all(1.0),
-      itemCount: _sortedFullDetailsResultKeys.length,
-      itemBuilder: (BuildContext context, int index) {
-        return Container(
-          height: 50,
-          child: Row(
-            children: [
-              Expanded(
-                flex: 3,
-                child: Text(_sortedFullDetailsResultKeys[index]),
-              ),
-              Expanded(
-                flex: 1,
-                child: Text(
-                  _fullDetailsMap[_sortedFullDetailsResultKeys[index]]['death'].toString(),
-                  textAlign: TextAlign.end,
+    var _confirmedCasesList = FutureBuilder<StateDataModel>(
+      future: _nationalDetails,
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          return ListView.builder(
+            padding: const EdgeInsets.all(1.0),
+            itemCount: 37,
+            itemBuilder: (BuildContext context, int index) {
+              return Container(
+                height: 50,
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: Text(snapshot.data.states.elementAt(index).name),
+                    ),
+                    Expanded(
+                      flex: 1,
+                      child: Text(
+                        snapshot.data.states.elementAt(index).confirmedCases.toString(),
+                        textAlign: TextAlign.end,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
+              );
+            },
+          );
+        } else if (snapshot.hasError) {
+          return Expanded(
+            child: Center(
+              child: Text("Unable to fetch data"),
+            ),
+          );
+        }
+        return Expanded(
+          child: Center(
+            child: CircularProgressIndicator(),
           ),
         );
       },
     );
 
-    var _deathPerStateSection = Expanded(
+    var _confirmedCasesSection = Expanded(
       flex: 1,
       child: SizedBox.expand(
         child: Card(
@@ -432,11 +582,11 @@ class _MyHomePageState extends State<MyHomePage> {
             child: Column(
               children: [
                 Text(
-                    "Death Per State",
+                    "Confirmed Cases",
                     style: Theme.of(context).textTheme.headline5
                 ),
                 Expanded(
-                  child: _deathPerStateList,
+                  child: _confirmedCasesList,
                 )
               ],
             ),
@@ -499,7 +649,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       _nationalSummarySection,
-                      _deathPerStateSection,
+                      _confirmedCasesSection,
                     ],
                   )
               ),
